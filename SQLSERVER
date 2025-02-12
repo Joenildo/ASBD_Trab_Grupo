@@ -1,0 +1,145 @@
+-- Criar a base de dados
+CREATE DATABASE Clinica;
+GO
+
+-- Selecionar a base de dados
+USE Clinica;
+GO
+
+-- Tabela Utilizador (com senha encriptada)
+CREATE TABLE Utilizador (
+    id_utilizador INT PRIMARY KEY IDENTITY(1,1),
+    nome NVARCHAR(100) NOT NULL,
+    email NVARCHAR(100) UNIQUE NOT NULL,
+    senha NVARCHAR(255) NOT NULL, -- A senha será encriptada
+    telefone NVARCHAR(15),
+    cargo NVARCHAR(50) CHECK (cargo IN ('Administrador', 'Médico', 'Secretária', 'Atendente')),
+    ativo BIT DEFAULT 1,
+    data_criacao DATETIME DEFAULT GETDATE()
+);
+GO
+
+-- Tabela Atendente
+CREATE TABLE Atendente (
+    id_atendente INT PRIMARY KEY IDENTITY(1,1),
+    id_utilizador INT,
+    FOREIGN KEY (id_utilizador) REFERENCES Utilizador(id_utilizador)
+);
+GO
+
+-- Tabela Médico
+CREATE TABLE Medico (
+    id_medico INT PRIMARY KEY IDENTITY(1,1),
+    id_utilizador INT,
+    especialidade NVARCHAR(100),
+    CRM NVARCHAR(50) UNIQUE,
+    telefone_clinico NVARCHAR(15),
+    FOREIGN KEY (id_utilizador) REFERENCES Utilizador(id_utilizador)
+);
+GO
+
+-- Tabela Paciente
+CREATE TABLE Paciente (
+    id_paciente INT PRIMARY KEY IDENTITY(1,1),
+    nome NVARCHAR(100) NOT NULL,
+    data_nascimento DATE NOT NULL,
+    sexo CHAR(1) CHECK (sexo IN ('M', 'F')),
+    telefone NVARCHAR(15),
+    email NVARCHAR(100),
+    endereco NVARCHAR(255)
+);
+GO
+
+-- Tabela Exame
+CREATE TABLE Exame (
+    id_exame INT PRIMARY KEY IDENTITY(1,1),
+    id_paciente INT,
+    id_medico INT,
+    tipo_exame NVARCHAR(100),
+    resultado TEXT,
+    data_exame DATETIME,
+    FOREIGN KEY (id_paciente) REFERENCES Paciente(id_paciente),
+    FOREIGN KEY (id_medico) REFERENCES Medico(id_medico)
+);
+GO
+
+-- Tabela Consulta
+ 
+GO
+
+-- Tabela Agendamento
+CREATE TABLE Agendamento (
+    id_agendamento INT PRIMARY KEY IDENTITY(1,1),
+    id_paciente INT,
+    id_medico INT,
+    id_atendente INT,
+    id_exame INT NULL,
+    data_hora DATETIME,
+    status NVARCHAR(20) CHECK (status IN ('Agendado', 'Cancelado', 'Realizado')),
+    FOREIGN KEY (id_paciente) REFERENCES Paciente(id_paciente),
+    FOREIGN KEY (id_medico) REFERENCES Medico(id_medico),
+    FOREIGN KEY (id_atendente) REFERENCES Atendente(id_atendente),
+    FOREIGN KEY (id_exame) REFERENCES Exame(id_exame)
+);
+GO
+
+-- Tabela Pagamento
+CREATE TABLE Pagamento (
+    id_pagamento INT PRIMARY KEY IDENTITY(1,1),
+    id_consulta INT,
+    valor DECIMAL(10,2),
+    forma_pagamento NVARCHAR(20) CHECK (forma_pagamento IN ('Dinheiro', 'Cartão', 'Convênio')),
+    status NVARCHAR(20) CHECK (status IN ('Pago', 'Pendente')),
+    data_pagamento DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (id_consulta) REFERENCES Consulta(id_consulta)
+);
+GO
+
+-- Tabela Permissões (Controle de permissões por cargo)
+CREATE TABLE Permissoes (
+    id_permissao INT PRIMARY KEY IDENTITY(1,1),
+    cargo NVARCHAR(50) CHECK (cargo IN ('Administrador', 'Médico', 'Secretária', 'Atendente')),
+    pode_ver_dados_paciente BIT DEFAULT 0,     -- Permite visualizar dados de pacientes
+    pode_gerir_exames BIT DEFAULT 0,           -- Permite gerir exames (secretária)
+    pode_gerir_pacientes BIT DEFAULT 0,        -- Permite atualizar dados dos pacientes
+    pode_gerir_consultas BIT DEFAULT 0,        -- Permite agendar, reagendar consultas
+    pode_gerir_pagamentos BIT DEFAULT 0,       -- Permite gerir pagamentos
+    pode_gerir_utilizadores BIT DEFAULT 0      -- Permite gerir utilizadores (admin)
+);
+GO
+
+-- Inserir permissões para cada cargo
+-- Administrador tem acesso completo
+INSERT INTO Permissoes (cargo, pode_ver_dados_paciente, pode_gerir_exames, pode_gerir_pacientes, pode_gerir_consultas, pode_gerir_pagamentos, pode_gerir_utilizadores)
+VALUES ('Administrador', 1, 1, 1, 1, 1, 1);
+
+-- Médico só pode ver dados dos pacientes
+INSERT INTO Permissoes (cargo, pode_ver_dados_paciente, pode_gerir_exames, pode_gerir_pacientes, pode_gerir_consultas, pode_gerir_pagamentos, pode_gerir_utilizadores)
+VALUES ('Médico', 1, 0, 0, 0, 0, 0);
+
+-- Secretária pode gerir exames e atualizar informações dos pacientes
+INSERT INTO Permissoes (cargo, pode_ver_dados_paciente, pode_gerir_exames, pode_gerir_pacientes, pode_gerir_consultas, pode_gerir_pagamentos, pode_gerir_utilizadores)
+VALUES ('Secretária', 1, 1, 1, 0, 0, 0);
+
+-- Atendente pode agendar ou reagendar consultas
+INSERT INTO Permissoes (cargo, pode_ver_dados_paciente, pode_gerir_exames, pode_gerir_pacientes, pode_gerir_consultas, pode_gerir_pagamentos, pode_gerir_utilizadores)
+VALUES ('Atendente', 1, 0, 0, 1, 0, 0);
+GO
+
+-- Função para encriptar a senha (exemplo de encriptação SHA256)
+CREATE FUNCTION dbo.EncriptarSenha (@senha NVARCHAR(100))
+RETURNS NVARCHAR(255)
+AS
+BEGIN
+    RETURN CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(100), @senha)), 2)
+END
+GO
+
+-- Exemplo de como adicionar um utilizador com senha encriptada
+DECLARE @senha NVARCHAR(100) = 'senhaExemplo';
+
+INSERT INTO Utilizador (nome, email, senha, telefone, cargo, ativo, data_criacao)
+VALUES ('João Silva', 'joao@clinica.com', dbo.EncriptarSenha(@senha), '123456789', 'Administrador', 1, GETDATE());
+GO
+
+
