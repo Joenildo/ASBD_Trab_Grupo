@@ -86,9 +86,9 @@ Foi criada a função `dbo.EncriptarSenha` que utiliza SHA256 para encriptar as 
 
 **Exemplo de inserção de utilizador com senha encriptada:**
 ```sql
-DECLARE @senha NVARCHAR(100) = 'senhaExemplo';
+DECLARE @senha NVARCHAR(100) = 'jsilva';
 INSERT INTO Utilizador (nome, email, senha, telefone, cargo, ativo, data_criacao)
-VALUES ('João Silva', 'joao@clinica.com', dbo.EncriptarSenha(@senha), '123456789', 'Administrador', 1, GETDATE());
+VALUES ('João Silva', 'joao@clinica.com', dbo.EncriptarSenha(@senha), '9854578', 'Administrador', 1, GETDATE());
 ```
 
 ## 3. Conclusão
