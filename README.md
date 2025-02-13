@@ -1,7 +1,7 @@
 # Relatório do Sistema de Gestão da Clínica
 
 ## 1. Introdução
-# Este documento apresenta a estrutura da base de dados do sistema de gestão da clínica. Essa base de dados foi criada usando o **SQL Server**. O sistema foi concebido para gerir utilizadores, pacientes, consultas, exames, agendamentos e pagamentos, garantindo segurança e eficiência no armazenamento e manipulação dos dados.
+## Este documento apresenta a estrutura da base de dados do sistema de gestão da clínica. Essa base de dados foi criada usando o **SQL Server**. O sistema foi concebido para gerir utilizadores, pacientes, consultas, exames, agendamentos e pagamentos, garantindo segurança e eficiência no armazenamento e manipulação dos dados.
 
 ## 2. Estrutura da Base de Dados
 A base de dados foi criada com o nome `Clinica` e contém as seguintes tabelas principais:
